@@ -37,7 +37,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool()
     async def connectwise_asio_create_alarm_record(
-        company_id: str, site_id: str, alarms: list, family: str, severity: str, type: str
+        company_id: str, site_id: str, alarms: list[dict], family: str, severity: str, type: str
     ) -> str:
         """Store a backup alarm record raised by the vendor.
 
@@ -68,7 +68,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         company_id: str,
         site_id: str,
         id: str,
-        devices: list,
+        devices: list[dict],
         triggered_by: str,
         backup_job_id: str | None = None,
         backup_name: str | None = None,
@@ -109,7 +109,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         site_id: str,
         backup_job_id: str,
         backup_job_name: str,
-        devices: list,
+        devices: list[dict],
         job_type: str,
         managed_by: str,
         appliance_id: str | None = None,

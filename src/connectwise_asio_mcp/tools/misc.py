@@ -10,7 +10,7 @@ from ._common import NO_TOKEN
 def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> None:
 
     @mcp.tool()
-    async def connectwise_asio_upload_product_usage(usage_records: list) -> str:
+    async def connectwise_asio_upload_product_usage(usage_records: list[dict]) -> str:
         """Upload vendor product usage records for the partner (billing intake).
 
         API: POST /api/platform/v1/client-billing/product-usage (schema: array<UsageUpload>)

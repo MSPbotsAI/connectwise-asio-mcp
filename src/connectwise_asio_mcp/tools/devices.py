@@ -269,7 +269,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool()
     async def connectwise_asio_uninstall_endpoints(
-        endpoints: list, reason: str | None = None, feedback: str | None = None
+        endpoints: list[dict], reason: str | None = None, feedback: str | None = None
     ) -> str:
         """⚠️ DESTRUCTIVE: Uninstall the RMM agent from multiple endpoints (devices).
 
@@ -374,7 +374,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_create_network_device(company_id: str, site_id: str, body: dict) -> str:
+    async def connectwise_asio_create_network_device(
+        company_id: str, site_id: str, body: dict[str, object]
+    ) -> str:
         """Create/review network device information for a site.
 
         API: POST /api/platform/v2/companies/{companyID}/sites/{siteID}/network-devices (schema: NetworkDevice)
@@ -399,7 +401,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool()
     async def connectwise_asio_update_network_device(
-        company_id: str, site_id: str, endpoint_id: str, body: dict
+        company_id: str, site_id: str, endpoint_id: str, body: dict[str, object]
     ) -> str:
         """Update network device information for an endpoint.
 

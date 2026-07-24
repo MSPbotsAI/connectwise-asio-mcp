@@ -185,7 +185,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_ticket_tag(tag_id: str, patch_operations: list) -> str:
+    async def connectwise_asio_update_ticket_tag(tag_id: str, patch_operations: list[dict]) -> str:
         """Partially update a ticket tag using JSON Patch (RFC 6902).
 
         API: PATCH /api/platform/v1/service/ticketing/tags/{id}
@@ -280,7 +280,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool()
     async def connectwise_asio_create_ticket_note(
-        ticket_id: str, detail: str, visibility: int, extended_attributes: list | None = None
+        ticket_id: str, detail: str, visibility: int, extended_attributes: list[dict] | None = None
     ) -> str:
         """Create a new note on a service ticket.
 
@@ -333,7 +333,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         note_id: str,
         detail: str,
         visibility: int,
-        extended_attributes: list | None = None,
+        extended_attributes: list[dict] | None = None,
     ) -> str:
         """Replace a note on a service ticket.
 
@@ -361,7 +361,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_ticket_note(ticket_id: str, note_id: str, patch_operations: list) -> str:
+    async def connectwise_asio_update_ticket_note(ticket_id: str, note_id: str, patch_operations: list[dict]) -> str:
         """Partially update a note on a service ticket using JSON Patch (RFC 6902).
 
         API: PATCH /api/platform/v1/service/ticketing/tickets/{id}/notes/{noteId}
@@ -531,9 +531,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
     async def connectwise_asio_create_ticket(
         description: str,
         summary: str,
-        service_board: dict,
-        source: dict,
-        extra: dict | None = None,
+        service_board: dict[str, object],
+        source: dict[str, object],
+        extra: dict[str, object] | None = None,
     ) -> str:
         """Create a new service ticket.
 
@@ -590,9 +590,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         ticket_id: str,
         description: str,
         summary: str,
-        service_board: dict,
-        source: dict,
-        extra: dict | None = None,
+        service_board: dict[str, object],
+        source: dict[str, object],
+        extra: dict[str, object] | None = None,
     ) -> str:
         """Replace (full update) a service ticket by ID.
 
@@ -627,7 +627,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_ticket(ticket_id: str, patch_operations: list) -> str:
+    async def connectwise_asio_update_ticket(ticket_id: str, patch_operations: list[dict]) -> str:
         """Partially update a service ticket using JSON Patch (RFC 6902).
 
         API: PATCH /api/platform/v2/service/ticketing/tickets/{id}

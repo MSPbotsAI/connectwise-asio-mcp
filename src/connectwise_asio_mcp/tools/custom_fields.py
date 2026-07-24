@@ -34,7 +34,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_create_custom_field_definition(body: dict) -> str:
+    async def connectwise_asio_create_custom_field_definition(body: dict[str, object]) -> str:
         """Create a new custom field definition schema.
 
         API: POST /api/platform/v1/custom-field/definitions
@@ -72,7 +72,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_custom_field_definition(definition_id: str, body: dict) -> str:
+    async def connectwise_asio_update_custom_field_definition(
+        definition_id: str, body: dict[str, object]
+    ) -> str:
         """Replace a custom field definition schema by ID.
 
         API: PUT /api/platform/v1/custom-field/definitions/{definitionID}
@@ -147,7 +149,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_company_custom_fields(company_id: str, body: dict) -> str:
+    async def connectwise_asio_update_company_custom_fields(
+        company_id: str, body: dict[str, object]
+    ) -> str:
         """Update multiple custom field values for a company.
 
         API: PUT /api/platform/v1/company/companies/{companyId}/custom-fields
@@ -204,7 +208,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_site_custom_fields(site_id: str, body: dict) -> str:
+    async def connectwise_asio_update_site_custom_fields(
+        site_id: str, body: dict[str, object]
+    ) -> str:
         """Update multiple custom field values for a site.
 
         API: PUT /api/platform/v1/company/sites/{siteId}/custom-fields
@@ -261,7 +267,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_device_custom_fields(endpoint_id: str, body: dict) -> str:
+    async def connectwise_asio_update_device_custom_fields(
+        endpoint_id: str, body: dict[str, object]
+    ) -> str:
         """Update multiple custom field values for a device (endpoint).
 
         API: PUT /api/platform/v2/device/endpoints/{endpointID}/custom-fields

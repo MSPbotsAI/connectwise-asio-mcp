@@ -10,7 +10,9 @@ from ._common import NO_TOKEN
 def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> None:
 
     @mcp.tool()
-    async def connectwise_asio_lookup_mappings(schemas: list, criteria: dict, all: bool | None = None) -> str:
+    async def connectwise_asio_lookup_mappings(
+        schemas: list[dict], criteria: dict[str, object], all: bool | None = None
+    ) -> str:
         """Look up attributes for given schema IDs based on source attributes.
 
         API: POST /api/platform/v1/mapping/mappings/lookup (schema: LookupRequest)
@@ -56,7 +58,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool()
     async def connectwise_asio_create_site_endpoint_mappings(
-        company_id: str, site_id: str, mappings: list
+        company_id: str, site_id: str, mappings: list[dict]
     ) -> str:
         """Create or update integrator endpoint mappings for a company's site.
 
@@ -84,7 +86,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool()
     async def connectwise_asio_replace_site_endpoint_mappings(
-        company_id: str, site_id: str, mappings: list
+        company_id: str, site_id: str, mappings: list[dict]
     ) -> str:
         """Replace all existing integrator endpoint mappings for a company's site with new ones.
 

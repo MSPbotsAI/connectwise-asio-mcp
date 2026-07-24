@@ -25,7 +25,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_create_company(body: dict) -> str:
+    async def connectwise_asio_create_company(body: dict[str, object]) -> str:
         """Create a new company (client).
 
         API: POST /api/platform/v1/company/companies (schema: CompanyCreateRequest)
@@ -66,7 +66,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_replace_company(company_id: str, body: dict) -> str:
+    async def connectwise_asio_replace_company(company_id: str, body: dict[str, object]) -> str:
         """Replace (full update) a company by ID.
 
         API: PUT /api/platform/v1/company/companies/{companyId} (schema: CompanyUpdateRequest)
@@ -87,7 +87,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_company(company_id: str, patch_operations: list) -> str:
+    async def connectwise_asio_update_company(company_id: str, patch_operations: list[dict]) -> str:
         """Partially update a company using JSON Patch (RFC 6902).
 
         API: PATCH /api/platform/v1/company/companies/{companyId}
@@ -127,7 +127,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_create_company_site(company_id: str, body: dict) -> str:
+    async def connectwise_asio_create_company_site(
+        company_id: str, body: dict[str, object]
+    ) -> str:
         """Create a new site under a company.
 
         API: POST /api/platform/v1/company/companies/{companyId}/sites (schema: SiteCreateRequest)
@@ -172,7 +174,9 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_replace_company_site(company_id: str, site_id: str, body: dict) -> str:
+    async def connectwise_asio_replace_company_site(
+        company_id: str, site_id: str, body: dict[str, object]
+    ) -> str:
         """Replace (full update) a company's site by ID.
 
         API: PUT /api/platform/v1/company/companies/{companyId}/sites/{siteId} (schema: Site)
@@ -198,7 +202,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool()
     async def connectwise_asio_update_company_site(
-        company_id: str, site_id: str, patch_operations: list
+        company_id: str, site_id: str, patch_operations: list[dict]
     ) -> str:
         """Partially update a company's site using JSON Patch (RFC 6902).
 
@@ -256,7 +260,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_create_contact(body: dict) -> str:
+    async def connectwise_asio_create_contact(body: dict[str, object]) -> str:
         """Create a new contact.
 
         API: POST /api/platform/v1/contact/contacts (schema: ContactCreateRequest)

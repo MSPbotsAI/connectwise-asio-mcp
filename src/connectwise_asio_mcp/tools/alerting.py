@@ -10,7 +10,7 @@ from ._common import NO_TOKEN
 def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> None:
 
     @mcp.tool()
-    async def connectwise_asio_create_alerts(alerts: list) -> str:
+    async def connectwise_asio_create_alerts(alerts: list[dict]) -> str:
         """Create one or more alerts.
 
         API: POST /v2/alerts
@@ -29,7 +29,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_alerts(alerts: list) -> str:
+    async def connectwise_asio_update_alerts(alerts: list[dict]) -> str:
         """Update one or more existing alerts.
 
         API: PUT /v2/alerts
@@ -48,7 +48,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_delete_alerts(alerts: list) -> str:
+    async def connectwise_asio_delete_alerts(alerts: list[dict]) -> str:
         """Delete one or more alerts.
 
         API: DELETE /v2/alerts
@@ -67,7 +67,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_post_incident_alerts(incidents: list) -> str:
+    async def connectwise_asio_post_incident_alerts(incidents: list[dict]) -> str:
         """Add or update alert details for one or more security incidents.
 
         API: POST /api/v1/incidents
