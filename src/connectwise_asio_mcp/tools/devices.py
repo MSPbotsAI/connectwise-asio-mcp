@@ -8,7 +8,6 @@ from ._common import NO_TOKEN
 
 
 def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> None:
-
     @mcp.tool()
     async def connectwise_asio_list_endpoints(
         category: str,
@@ -159,57 +158,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_get_hypervisor_hosts() -> str:
-        """Get monitored VMware hypervisor hosts.
-
-        API: GET /api/platform/v2/device/hypervisors/hosts
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.get("/api/platform/v2/device/hypervisors/hosts")
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_get_device_id_mapping(mapping_type: str, filter: str) -> str:
-        """Fetch the publicID <-> privateID mapping for devices.
-
-        API: GET /api/platform/v2/device/mappings/{mappingType}
-
-        Args:
-            mapping_type: One of "public", "private".
-            filter: Required filter expression (e.g. IDs to map).
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.get(
-                f"/api/platform/v2/device/mappings/{mapping_type}", params={"filter": filter}
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_get_unique_services() -> str:
-        """Get the unique set of services observed across the partner's endpoints.
-
-        API: GET /api/platform/v2/device/services
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.get("/api/platform/v2/device/services")
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     async def connectwise_asio_get_endpoint_disk_usage(endpoint_id: str) -> str:
         """Get the latest disk usage for an endpoint.
 
@@ -268,37 +216,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_uninstall_endpoints(
-        endpoints: list[dict], reason: str | None = None, feedback: str | None = None
-    ) -> str:
-        """⚠️ DESTRUCTIVE: Uninstall the RMM agent from multiple endpoints (devices).
-
-        This permanently removes monitoring/management capability from the
-        listed devices. There is no dry-run — verify the endpoint ID list
-        carefully before calling. Never call this against production data
-        without explicit user confirmation for each affected device.
-
-        API: DELETE /api/platform/v2/device/endpoints/uninstall
-
-        Args:
-            endpoints: List of endpoint identifiers to uninstall (schema: EndpointUninstall
-                per endpoint — typically {"endpointId": "..."}).
-            reason: Optional reason for the uninstall.
-            feedback: Optional free-text feedback.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.delete(
-                "/api/platform/v2/device/endpoints/uninstall",
-                json_body={"endpoints": endpoints, "reason": reason, "feedback": feedback},
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     async def connectwise_asio_get_endpoint_heartbeat(
         resource_type: str,
         resources: str,
@@ -332,122 +249,3 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         except AsioError as e:
             return f"Error: {e}"
 
-    @mcp.tool()
-    async def connectwise_asio_update_endpoint_friendly_name(
-        company_id: str, site_id: str, endpoint_id: str, friendly_name: str
-    ) -> str:
-        """Update the friendly (display) name of an endpoint.
-
-        API: PATCH /api/platform/v2/device/companies/{companyID}/sites/{siteID}/endpoints/{endpointID}/friendlyName
-
-        Args:
-            company_id: Company ID.
-            site_id: Site ID.
-            endpoint_id: Endpoint (device) ID.
-            friendly_name: New friendly name for the device.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.patch(
-                f"/api/platform/v2/device/companies/{company_id}/sites/{site_id}/endpoints/{endpoint_id}/friendlyName",
-                json_body={"friendlyName": friendly_name},
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_get_device_groups() -> str:
-        """List all device groups for the partner.
-
-        API: GET /api/platform/v1/device-groups
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.get("/api/platform/v1/device-groups")
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_create_network_device(
-        company_id: str, site_id: str, body: dict[str, object]
-    ) -> str:
-        """Create/review network device information for a site.
-
-        API: POST /api/platform/v2/companies/{companyID}/sites/{siteID}/network-devices (schema: NetworkDevice)
-
-        Args:
-            company_id: Company ID.
-            site_id: Site ID.
-            body: NetworkDevice fields — deviceId, interfaces (array), links,
-                scopeId, system.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.post(
-                f"/api/platform/v2/companies/{company_id}/sites/{site_id}/network-devices",
-                json_body=body,
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_update_network_device(
-        company_id: str, site_id: str, endpoint_id: str, body: dict[str, object]
-    ) -> str:
-        """Update network device information for an endpoint.
-
-        API: PUT /api/platform/v2/companies/{companyID}/sites/{siteID}/endpoints/{endpointID}/network-devices (schema: NetworkDevice)
-
-        Args:
-            company_id: Company ID.
-            site_id: Site ID.
-            endpoint_id: Endpoint (device) ID.
-            body: NetworkDevice fields — deviceId, interfaces (array), links,
-                scopeId, system.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.put(
-                f"/api/platform/v2/companies/{company_id}/sites/{site_id}/endpoints/{endpoint_id}/network-devices",
-                json_body=body,
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_delete_network_device(
-        company_id: str, site_id: str, endpoint_id: str, device_id: str
-    ) -> str:
-        """Delete a network device.
-
-        API: DELETE /api/platform/v2/companies/{companyID}/sites/{siteID}/endpoints/{endpointID}/network-devices
-
-        Args:
-            company_id: Company ID.
-            site_id: Site ID.
-            endpoint_id: Endpoint (device) ID.
-            device_id: Network device ID to delete.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.delete(
-                f"/api/platform/v2/companies/{company_id}/sites/{site_id}/endpoints/{endpoint_id}/network-devices",
-                json_body={"deviceId": device_id},
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"

@@ -91,29 +91,17 @@ def create_mcp_server(settings: Settings) -> FastMCP:
     client_factory: Callable[[], AsioClient | None] = lambda: get_client_from_context(settings)
 
     from .tools import (
-        alerting,
         automation,
-        backup_dashboard,
         companies_contacts,
         custom_fields,
         devices,
-        mapping,
-        misc,
         patching,
-        policy,
-        tickets,
     )
 
     companies_contacts.register(mcp, client_factory)
     custom_fields.register(mcp, client_factory)
     devices.register(mcp, client_factory)
-    policy.register(mcp, client_factory)
     patching.register(mcp, client_factory)
-    tickets.register(mcp, client_factory)
-    alerting.register(mcp, client_factory)
-    mapping.register(mcp, client_factory)
     automation.register(mcp, client_factory)
-    backup_dashboard.register(mcp, client_factory)
-    misc.register(mcp, client_factory)
 
     return mcp

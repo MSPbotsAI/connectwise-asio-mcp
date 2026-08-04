@@ -8,7 +8,6 @@ from ._common import NO_TOKEN
 
 
 def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> None:
-
     @mcp.tool()
     async def connectwise_asio_get_custom_field_definitions(
         entity_type: str | None = None, origin_type: str | None = None
@@ -34,26 +33,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_create_custom_field_definition(body: dict[str, object]) -> str:
-        """Create a new custom field definition schema.
-
-        API: POST /api/platform/v1/custom-field/definitions
-
-        Args:
-            body: Custom field definition schema — field name, data type,
-                applicable entity type, and validation rules per the
-                ConnectWise Asio Custom Fields Definitions API reference.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.post("/api/platform/v1/custom-field/definitions", json_body=body)
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     async def connectwise_asio_get_custom_field_definition(definition_id: str) -> str:
         """Get a custom field definition schema by ID.
 
@@ -67,47 +46,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return NO_TOKEN
         try:
             result = await client.get(f"/api/platform/v1/custom-field/definitions/{definition_id}")
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_update_custom_field_definition(
-        definition_id: str, body: dict[str, object]
-    ) -> str:
-        """Replace a custom field definition schema by ID.
-
-        API: PUT /api/platform/v1/custom-field/definitions/{definitionID}
-
-        Args:
-            definition_id: Definition ID to update.
-            body: Full custom field definition schema.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.put(
-                f"/api/platform/v1/custom-field/definitions/{definition_id}", json_body=body
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
-    async def connectwise_asio_delete_custom_field_definition(definition_id: str) -> str:
-        """Delete a custom field definition and all its values by ID.
-
-        API: DELETE /api/platform/v1/custom-field/definitions/{definitionID}
-
-        Args:
-            definition_id: Definition ID to delete.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.delete(f"/api/platform/v1/custom-field/definitions/{definition_id}")
             return json.dumps(result, indent=2)
         except AsioError as e:
             return f"Error: {e}"
@@ -208,29 +146,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return f"Error: {e}"
 
     @mcp.tool()
-    async def connectwise_asio_update_site_custom_fields(
-        site_id: str, body: dict[str, object]
-    ) -> str:
-        """Update multiple custom field values for a site.
-
-        API: PUT /api/platform/v1/company/sites/{siteId}/custom-fields
-
-        Args:
-            site_id: Site ID.
-            body: Custom field values keyed by definition/attribute ID.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.put(
-                f"/api/platform/v1/company/sites/{site_id}/custom-fields", json_body=body
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
-
-    @mcp.tool()
     async def connectwise_asio_get_device_custom_fields(
         endpoint_id: str,
         attribute_ids: str | None = None,
@@ -266,25 +181,3 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         except AsioError as e:
             return f"Error: {e}"
 
-    @mcp.tool()
-    async def connectwise_asio_update_device_custom_fields(
-        endpoint_id: str, body: dict[str, object]
-    ) -> str:
-        """Update multiple custom field values for a device (endpoint).
-
-        API: PUT /api/platform/v2/device/endpoints/{endpointID}/custom-fields
-
-        Args:
-            endpoint_id: Device/endpoint ID.
-            body: Custom field values keyed by definition/attribute ID.
-        """
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.put(
-                f"/api/platform/v2/device/endpoints/{endpoint_id}/custom-fields", json_body=body
-            )
-            return json.dumps(result, indent=2)
-        except AsioError as e:
-            return f"Error: {e}"
