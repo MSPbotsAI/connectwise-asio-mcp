@@ -1,25 +1,27 @@
-import json
 from collections.abc import Callable
+from typing import Annotated
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
+from pydantic import Field
 
+from .._json import dump_json_capped
 from ..api_client import AsioClient, AsioError
 from ._common import NO_TOKEN
 
 
 def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> None:
-    @mcp.tool()
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_custom_field_definitions(
-        entity_type: str | None = None, origin_type: str | None = None
+        entity_type: Annotated[
+            str | None,
+            Field(description='Filter by entity type, e.g. "company", "site", "endpoint".'),
+        ] = None,
+        origin_type: Annotated[
+            str | None, Field(description="Filter by definition origin.")
+        ] = None,
     ) -> str:
-        """Get the list of custom field definitions for the partner (vendor-provided and partner-defined).
-
-        API: GET /api/platform/v1/custom-field/definitions
-
-        Args:
-            entity_type: Optional filter by entity type (e.g. "company", "site", "endpoint").
-            origin_type: Optional filter by definition origin.
-        """
+        """List custom field definitions for the partner (vendor-provided and partner-defined)."""
         client = client_factory()
         if client is None:
             return NO_TOKEN
@@ -28,47 +30,42 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
                 "/api/platform/v1/custom-field/definitions",
                 params={"entityType": entity_type, "originType": origin_type},
             )
-            return json.dumps(result, indent=2)
+            return dump_json_capped(result)
         except AsioError as e:
-            return f"Error: {e}"
+            return e.to_envelope()
 
-    @mcp.tool()
-    async def connectwise_asio_get_custom_field_definition(definition_id: str) -> str:
-        """Get a custom field definition schema by ID.
-
-        API: GET /api/platform/v1/custom-field/definitions/{definitionID}
-
-        Args:
-            definition_id: Definition ID, from connectwise_asio_get_custom_field_definitions.
-        """
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
+    async def connectwise_asio_get_custom_field_definition(
+        definition_id: Annotated[
+            str,
+            Field(
+                description="Definition ID, from connectwise_asio_get_custom_field_definitions."
+            ),
+        ],
+    ) -> str:
+        """Get a single custom field definition's schema by ID."""
         client = client_factory()
         if client is None:
             return NO_TOKEN
         try:
             result = await client.get(f"/api/platform/v1/custom-field/definitions/{definition_id}")
-            return json.dumps(result, indent=2)
+            return dump_json_capped(result)
         except AsioError as e:
-            return f"Error: {e}"
+            return e.to_envelope()
 
-    @mcp.tool()
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_company_custom_fields(
-        company_id: str,
-        attribute_ids: str | None = None,
-        with_defaults: bool | None = None,
-        origin_type: str | None = None,
-        owner_id: str | None = None,
+        company_id: Annotated[str, Field(description="Company ID.")],
+        attribute_ids: Annotated[
+            str | None, Field(description="Comma-separated attribute IDs to filter to.")
+        ] = None,
+        with_defaults: Annotated[
+            bool | None, Field(description="Include default values when true.")
+        ] = None,
+        origin_type: Annotated[str | None, Field(description="Filter by value origin.")] = None,
+        owner_id: Annotated[str | None, Field(description="Filter by owner ID.")] = None,
     ) -> str:
-        """Get custom field values for a company.
-
-        API: GET /api/platform/v1/company/companies/{companyId}/custom-fields
-
-        Args:
-            company_id: Company ID.
-            attribute_ids: Optional comma-separated list of attribute IDs to filter.
-            with_defaults: Optional — include default values when true.
-            origin_type: Optional filter by value origin.
-            owner_id: Optional filter by owner ID.
-        """
+        """Get custom field values set on a company."""
         client = client_factory()
         if client is None:
             return NO_TOKEN
@@ -82,22 +79,19 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
                     "ownerID": owner_id,
                 },
             )
-            return json.dumps(result, indent=2)
+            return dump_json_capped(result)
         except AsioError as e:
-            return f"Error: {e}"
+            return e.to_envelope()
 
-    @mcp.tool()
+    @mcp.tool(annotations=ToolAnnotations(idempotentHint=True))
     async def connectwise_asio_update_company_custom_fields(
-        company_id: str, body: dict[str, object]
+        company_id: Annotated[str, Field(description="Company ID.")],
+        body: Annotated[
+            dict[str, object],
+            Field(description="Custom field values to set, keyed by definition/attribute ID."),
+        ],
     ) -> str:
-        """Update multiple custom field values for a company.
-
-        API: PUT /api/platform/v1/company/companies/{companyId}/custom-fields
-
-        Args:
-            company_id: Company ID.
-            body: Custom field values keyed by definition/attribute ID.
-        """
+        """Overwrite one or more custom field values for a company."""
         client = client_factory()
         if client is None:
             return NO_TOKEN
@@ -105,29 +99,23 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             result = await client.put(
                 f"/api/platform/v1/company/companies/{company_id}/custom-fields", json_body=body
             )
-            return json.dumps(result, indent=2)
+            return dump_json_capped(result)
         except AsioError as e:
-            return f"Error: {e}"
+            return e.to_envelope()
 
-    @mcp.tool()
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_site_custom_fields(
-        site_id: str,
-        attribute_ids: str | None = None,
-        with_defaults: bool | None = None,
-        origin_type: str | None = None,
-        owner_id: str | None = None,
+        site_id: Annotated[str, Field(description="Site ID.")],
+        attribute_ids: Annotated[
+            str | None, Field(description="Comma-separated attribute IDs to filter to.")
+        ] = None,
+        with_defaults: Annotated[
+            bool | None, Field(description="Include default values when true.")
+        ] = None,
+        origin_type: Annotated[str | None, Field(description="Filter by value origin.")] = None,
+        owner_id: Annotated[str | None, Field(description="Filter by owner ID.")] = None,
     ) -> str:
-        """Get custom field values for a site.
-
-        API: GET /api/platform/v1/company/sites/{siteId}/custom-fields
-
-        Args:
-            site_id: Site ID.
-            attribute_ids: Optional comma-separated list of attribute IDs to filter.
-            with_defaults: Optional — include default values when true.
-            origin_type: Optional filter by value origin.
-            owner_id: Optional filter by owner ID.
-        """
+        """Get custom field values set on a site."""
         client = client_factory()
         if client is None:
             return NO_TOKEN
@@ -141,29 +129,23 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
                     "ownerID": owner_id,
                 },
             )
-            return json.dumps(result, indent=2)
+            return dump_json_capped(result)
         except AsioError as e:
-            return f"Error: {e}"
+            return e.to_envelope()
 
-    @mcp.tool()
+    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_device_custom_fields(
-        endpoint_id: str,
-        attribute_ids: str | None = None,
-        with_defaults: bool | None = None,
-        origin_type: str | None = None,
-        owner_id: str | None = None,
+        endpoint_id: Annotated[str, Field(description="Device/endpoint ID.")],
+        attribute_ids: Annotated[
+            str | None, Field(description="Comma-separated attribute IDs to filter to.")
+        ] = None,
+        with_defaults: Annotated[
+            bool | None, Field(description="Include default values when true.")
+        ] = None,
+        origin_type: Annotated[str | None, Field(description="Filter by value origin.")] = None,
+        owner_id: Annotated[str | None, Field(description="Filter by owner ID.")] = None,
     ) -> str:
-        """Get custom field values for a device (endpoint).
-
-        API: GET /api/platform/v2/device/endpoints/{endpointID}/custom-fields
-
-        Args:
-            endpoint_id: Device/endpoint ID.
-            attribute_ids: Optional comma-separated list of attribute IDs to filter.
-            with_defaults: Optional — include default values when true.
-            origin_type: Optional filter by value origin.
-            owner_id: Optional filter by owner ID.
-        """
+        """Get custom field values set on a device (endpoint)."""
         client = client_factory()
         if client is None:
             return NO_TOKEN
@@ -177,7 +159,6 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
                     "ownerID": owner_id,
                 },
             )
-            return json.dumps(result, indent=2)
+            return dump_json_capped(result)
         except AsioError as e:
-            return f"Error: {e}"
-
+            return e.to_envelope()

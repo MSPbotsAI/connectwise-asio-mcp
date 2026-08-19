@@ -31,7 +31,7 @@ python -m connectwise_asio_mcp
 
 ```bash
 curl http://localhost:8080/health
-# {"status": "ok", "service": "connectwise-asio-mcp", "transport": "http"}
+# {"status": "ok"}
 ```
 
 No token is required for the health endpoint.

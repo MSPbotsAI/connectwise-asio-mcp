@@ -85,6 +85,25 @@ def create_mcp_server(settings: Settings) -> FastMCP:
     # correctly behind a reverse proxy or docker network.
     mcp = FastMCP(
         name="connectwise-asio-mcp",
+        instructions=(
+            "ConnectWise Asio (formerly ITSupport247) is an MSP RMM/automation "
+            "platform: partners manage client companies, each company's sites, "
+            "the endpoint devices (workstations/servers) at those sites, OS "
+            "patching compliance for those endpoints, and automation task "
+            "workflows. The 5 tool domains: companies_contacts (companies and "
+            "their sites), custom_fields (per-entity metadata attached to "
+            "companies/sites/devices), devices (fleet inventory plus endpoint "
+            "telemetry — CPU/memory/disk/services/system-state/heartbeat), "
+            "patching (per-endpoint patch lists and bulk OS-patch compliance/"
+            "detail summaries), and automation (scheduled automation tasks). "
+            "Typical flow: connectwise_asio_get_companies -> "
+            "connectwise_asio_get_company_sites -> "
+            "connectwise_asio_list_endpoints (or connectwise_asio_get_endpoint) "
+            "to locate a device, then feed its endpoint_id into the devices/"
+            "patching telemetry tools. All tools are read-only except "
+            "connectwise_asio_create_company and "
+            "connectwise_asio_update_company_custom_fields."
+        ),
         transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
     )
 
