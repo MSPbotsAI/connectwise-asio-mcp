@@ -26,7 +26,11 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             str, Field(description='Type of the IDs in resources, e.g. "companies", "sites".')
         ],
         resources: Annotated[
-            list[str], Field(description="Resource IDs (companies/sites) to fetch endpoints for.")
+            list[str],
+            Field(
+                min_length=1,
+                description="Resource IDs (companies/sites) to fetch endpoints for. Must be non-empty — resolve at least one company/site ID first (e.g. via connectwise_asio_get_companies), don't call this with an unscoped/empty list.",
+            ),
         ],
         limit: Annotated[
             int, Field(description="Page size (default 50, capped at 200).")
@@ -59,12 +63,16 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_endpoint(
-        company_id: Annotated[str, Field(description="Company ID.")],
-        site_id: Annotated[str, Field(description="Site ID.")],
-        endpoint_id: Annotated[str, Field(description="Endpoint (device) ID.")],
+        company_id: Annotated[str, Field(min_length=1, description="Company ID.")],
+        site_id: Annotated[str, Field(min_length=1, description="Site ID.")],
+        endpoint_id: Annotated[str, Field(min_length=1, description="Endpoint (device) ID.")],
         field: Annotated[str | None, Field(description="Field-selection filter.")] = None,
     ) -> str:
-        """Get full details of a specific endpoint (device)."""
+        """Get full details of a specific endpoint (device). Needs
+        company_id/site_id/endpoint_id already known — use
+        connectwise_asio_list_endpoints first to discover a device and
+        get all 3 IDs together; this tool can't discover one on its own.
+        """
         client = client_factory()
         if client is None:
             return NO_TOKEN
@@ -80,15 +88,18 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_endpoint_services(
-        company_id: Annotated[str, Field(description="Company ID.")],
-        site_id: Annotated[str, Field(description="Site ID.")],
-        endpoint_id: Annotated[str, Field(description="Endpoint (device) ID.")],
+        company_id: Annotated[str, Field(min_length=1, description="Company ID.")],
+        site_id: Annotated[str, Field(min_length=1, description="Site ID.")],
+        endpoint_id: Annotated[str, Field(min_length=1, description="Endpoint (device) ID.")],
         service_name: Annotated[
             str | None, Field(description="Filter to a specific service name.")
         ] = None,
         field: Annotated[str | None, Field(description="Field-selection filter.")] = None,
     ) -> str:
-        """Get service (Windows service / daemon) details for an endpoint."""
+        """Get service (Windows service / daemon) details for an endpoint.
+        Needs company_id/site_id/endpoint_id already known — use
+        connectwise_asio_list_endpoints first to discover a device.
+        """
         client = client_factory()
         if client is None:
             return NO_TOKEN
@@ -103,63 +114,8 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             return e.to_envelope()
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
-    async def connectwise_asio_get_endpoint_applications(
-        resource_type: Annotated[
-            str, Field(description='Type of the IDs in resources, e.g. "endpoints".')
-        ],
-        resources: Annotated[
-            list[str], Field(description="Endpoint IDs to fetch installed-application data for.")
-        ],
-        limit: Annotated[
-            int, Field(description="Page size (default 50, capped at 200).")
-        ] = 50,
-        cursor: Annotated[int, Field(description="Pagination cursor (default 0).")] = 0,
-        field: Annotated[str | None, Field(description="Field-selection filter.")] = None,
-        name: Annotated[str | None, Field(description="Filter by application name.")] = None,
-        version: Annotated[
-            str | None, Field(description="Filter by application version.")
-        ] = None,
-    ) -> str:
-        """Get installed-application details for a set of endpoints."""
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        limit = min(limit, _MAX_PAGE_SIZE)
-        try:
-            result = await client.post(
-                "/api/platform/v2/device/endpoints/applications",
-                params={
-                    "limit": limit,
-                    "cursor": cursor,
-                    "field": field,
-                    "name": name,
-                    "version": version,
-                },
-                json_body={"resourceType": resource_type, "resources": resources},
-            )
-            return dump_json_capped(result)
-        except AsioError as e:
-            return e.to_envelope()
-
-    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
-    async def connectwise_asio_get_endpoint_system_state(
-        endpoint_id: Annotated[str, Field(description="Endpoint (device) ID.")],
-    ) -> str:
-        """Get system state (running processes, services, etc.) for an endpoint."""
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.get(
-                f"/api/platform/v2/device/endpoints/{endpoint_id}/system-state-info"
-            )
-            return dump_json_capped(result)
-        except AsioError as e:
-            return e.to_envelope()
-
-    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_endpoint_disk_usage(
-        endpoint_id: Annotated[str, Field(description="Endpoint (device) ID.")],
+        endpoint_id: Annotated[str, Field(min_length=1, description="Endpoint (device) ID.")],
     ) -> str:
         """Get the latest disk usage for an endpoint."""
         client = client_factory()
@@ -173,7 +129,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_endpoint_memory_usage(
-        endpoint_id: Annotated[str, Field(description="Endpoint (device) ID.")],
+        endpoint_id: Annotated[str, Field(min_length=1, description="Endpoint (device) ID.")],
         minute: Annotated[
             int | None, Field(description="Minutes of history to look back.")
         ] = None,
@@ -193,7 +149,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
 
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_endpoint_cpu_usage(
-        endpoint_id: Annotated[str, Field(description="Endpoint (device) ID.")],
+        endpoint_id: Annotated[str, Field(min_length=1, description="Endpoint (device) ID.")],
     ) -> str:
         """Get the latest CPU usage for an endpoint."""
         client = client_factory()
@@ -211,7 +167,11 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             str, Field(description='One of "clients", "sites", "endpoints".')
         ],
         resources: Annotated[
-            str, Field(description="Comma-separated resource IDs matching resource_type.")
+            list[str],
+            Field(
+                min_length=1,
+                description="Resource IDs matching resource_type — same array shape as every other bulk tool here (list_endpoints, get_os_patch_compliance_summary, get_os_patch_details).",
+            ),
         ],
         offline_lookback: Annotated[
             str | None, Field(description="Lookback window for offline detection.")
@@ -229,7 +189,7 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
                 "/api/platform/v2/device/endpoints/heartbeat",
                 params={
                     "resourceType": resource_type,
-                    "resources": resources,
+                    "resources": ",".join(resources),
                     "offlineLookback": offline_lookback,
                     "availability": availability,
                 },

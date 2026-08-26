@@ -6,7 +6,7 @@
 
 ## Overview
 
-This server implements the [Model Context Protocol](https://modelcontextprotocol.io/) (Streamable HTTP/SSE transport) and wraps the ConnectWise Platform APIs — **25 tools** across 5 categories (`devices`, `companies_contacts`, `custom_fields`, `patching`, `automation`), trimmed down to MSPbots' actually-configured 23 endpoints plus minimal core CRUD (see Tool List below; originally a full-API build of 107 operations across 24 tag categories). It follows the MSPbots **Vendor MCP Service SOP**: stateless, no stored credentials, per-request header authentication.
+This server implements the [Model Context Protocol](https://modelcontextprotocol.io/) (Streamable HTTP/SSE transport) and wraps the ConnectWise Platform APIs — **15 tools** across 4 categories (`devices`, `companies_contacts`, `patching`, `automation`), trimmed to the core MSP RMM workflow: find a company/site, find its devices, check device health and patch status (see Tool List below; originally a full-API build of 107 operations across 24 tag categories, then a 25-tool MSPbots-configured-endpoints trim, then this 15-tool core-workflow trim on 2026-08-26 — see Known Gaps for what was cut and why). It follows the MSPbots **Vendor MCP Service SOP**: stateless, no stored credentials, per-request header authentication.
 
 The underlying API authenticates via **OAuth2 Client Credentials**. This server does not perform the token exchange itself — it receives an already-obtained bearer access token per request (matching how other OAuth-flow integrations, e.g. Microsoft Graph, are handled in this MSPbots MCP fleet: the gateway mints/refreshes the token from `client_id`/`client_secret`/`scope`, and only the resulting token reaches this server).
 
@@ -67,45 +67,32 @@ Connect your MCP client with:
 
 ## Tool List
 
-**25 tools**, trimmed down from an original 104-tool full-API build (2026-08-04). MSPbots' own stored integration config for this vendor calls 23 endpoints across 6 underlying resource categories (devices/endpoints, companies, sites, custom fields, patching, automation) — every one of those 23 configured endpoints (including separate v1/v2 path variants, which collapse onto the same tool here) maps to a tool kept below, marked with the endpoint name it corresponds to. Everything else from the original 104-tool build (Tickets — the single largest category at 24 tools, Policy/Policy Group/Package, Mapping, Alerting & Incidents, Backup Dashboard, Misc — 6 categories, ~79 tools) was removed as unused by MSPbots. If a removed category is needed later, the vendor's OpenAPI spec (linked below) still documents its exact operations and they can be re-added the same way the kept tools were generated.
+**15 tools.** History: an original 104-tool full-API build (covering every ConnectWise Platform APIs operation) was trimmed on 2026-08-04 to 25 tools matching MSPbots' actually-configured 23 endpoints. On 2026-08-26, a further trim to these 15 tools extracted the core MSP RMM workflow — find a company/site, find its devices, check device health and patch status — after an intent-matching test pass found the removed tools added surface area (and real description/schema gaps) without matching real usage. If a removed tool/category is needed later, the vendor's OpenAPI spec (linked below) still documents its exact operations and it can be re-added the same way the kept tools were generated; git history has the removed tools' implementations verbatim.
 
-**Known gap carried over from the original build**: MSPbots configured two endpoints — "ConnectWise Asio Suspension" (`GET /v2/alerting/suspensions`) and "ConnectWise Asio Suspension Details" (`GET /v2/alerting/suspensions/{ruleid}`) — that have **no corresponding tool** in this server at all (the original 104-tool build's `alerting` category only ever implemented create/update/delete/post-incident operations, never a GET-suspension read). This predates the trim and was not introduced by it; flagged here since it's now more visible with the smaller tool count. See Known Gaps below.
+**Removed in the 2026-08-26 trim** (10 tools): the entire Custom Fields category (6 tools — config/metadata management, not core monitoring), `connectwise_asio_create_company` (the only write tool; client onboarding isn't an agent task — this server is now fully read-only), `connectwise_asio_get_site` (redundant with `get_company_sites`), `connectwise_asio_get_endpoint_applications` (software-inventory audit, niche), `connectwise_asio_get_endpoint_system_state` (overlapped with the cpu/memory/disk/services tools and had an ambiguous own description).
 
-### Companies & Contacts (6)
+**Known gap carried over from the original build**: MSPbots configured two endpoints — "ConnectWise Asio Suspension" (`GET /v2/alerting/suspensions`) and "ConnectWise Asio Suspension Details" (`GET /v2/alerting/suspensions/{ruleid}`) — that have **no corresponding tool** in this server at all (the original 104-tool build's `alerting` category only ever implemented create/update/delete/post-incident operations, never a GET-suspension read). This predates both trims. See Known Gaps below.
+
+### Companies & Contacts (4)
 
 | Tool | Description | Params |
 |---|---|---|
-| `connectwise_asio_create_company` | Create a new company (client). | body |
 | `connectwise_asio_get_companies` | List all companies (clients) for the partner. | none |
 | `connectwise_asio_get_company` | Get a company by ID. | company_id |
 | `connectwise_asio_get_company_sites` | List all sites for a company. | company_id |
-| `connectwise_asio_get_site` | Get a site by ID (partner-wide, not scoped to a company). | site_id |
 | `connectwise_asio_get_sites` | List all sites for the partner (across all companies). | none |
 
-### Custom Fields (6)
+### Devices & Endpoints (7)
 
 | Tool | Description | Params |
 |---|---|---|
-| `connectwise_asio_get_company_custom_fields` | Get custom field values for a company. | company_id, attribute_ids?, with_defaults?, origin_type?, owner_id? |
-| `connectwise_asio_get_custom_field_definition` | Get a custom field definition schema by ID. | definition_id |
-| `connectwise_asio_get_custom_field_definitions` | Get the list of custom field definitions for the partner (vendor-provided and partner-defined). | entity_type?, origin_type? |
-| `connectwise_asio_get_device_custom_fields` | Get custom field values for a device (endpoint). | endpoint_id, attribute_ids?, with_defaults?, origin_type?, owner_id? |
-| `connectwise_asio_get_site_custom_fields` | Get custom field values for a site. | site_id, attribute_ids?, with_defaults?, origin_type?, owner_id? |
-| `connectwise_asio_update_company_custom_fields` | Update multiple custom field values for a company. | company_id, body |
-
-### Devices & Endpoints (9)
-
-| Tool | Description | Params |
-|---|---|---|
-| `connectwise_asio_get_endpoint` | Get full details of a specific endpoint (device). | company_id, site_id, endpoint_id, field? |
-| `connectwise_asio_get_endpoint_applications` | Get installed application details for a set of endpoints. | resource_type, resources, limit, cursor, field?, name?, version? |
+| `connectwise_asio_list_endpoints` | List devices (endpoints) for a given category, scoped to specific resources — the entry point for device discovery. | category, resource_type, resources, limit, cursor, sort_by?, field?, filter? |
+| `connectwise_asio_get_endpoint` | Get full details of a specific endpoint (device). Needs company_id/site_id/endpoint_id already known — use list_endpoints first. | company_id, site_id, endpoint_id, field? |
+| `connectwise_asio_get_endpoint_services` | Get service (Windows service / daemon) details for an endpoint. Needs all 3 IDs already known. | company_id, site_id, endpoint_id, service_name?, field? |
 | `connectwise_asio_get_endpoint_cpu_usage` | Get the latest CPU usage for an endpoint. | endpoint_id |
 | `connectwise_asio_get_endpoint_disk_usage` | Get the latest disk usage for an endpoint. | endpoint_id |
-| `connectwise_asio_get_endpoint_heartbeat` | Get online/offline availability information for devices. | resource_type, resources, offline_lookback?, availability? |
 | `connectwise_asio_get_endpoint_memory_usage` | Get the latest memory usage for an endpoint. | endpoint_id, minute? |
-| `connectwise_asio_get_endpoint_services` | Get service (Windows service / daemon) details for an endpoint. | company_id, site_id, endpoint_id, service_name?, field? |
-| `connectwise_asio_get_endpoint_system_state` | Get system state information (running processes, services, etc.) of an endpoint. | endpoint_id |
-| `connectwise_asio_list_endpoints` | List devices (endpoints) for a given category, scoped to specific resources. | category, resource_type, resources, limit, cursor, sort_by?, field?, filter? |
+| `connectwise_asio_get_endpoint_heartbeat` | Get online/offline availability information for devices (bulk). | resource_type, resources, offline_lookback?, availability? |
 
 ### Patching (3)
 
@@ -166,26 +153,28 @@ A parameterized call:
 
 ## Known Gaps / Not Yet Verified
 
-- **Trimmed from 104 to 25 tools on 2026-08-04.** The original build covered
-  the full ConnectWise Platform APIs spec per an earlier scope decision. A
-  later scope decision cut this back to MSPbots' actually-used categories —
-  see the Tool List section above for the exact endpoint→tool mapping and
-  the full list of the 6 removed categories (~79 tools, including the
-  24-tool `tickets` category, the single largest one in the original
-  build). If a removed category is needed later, the vendor's OpenAPI spec
-  (linked below) still documents its exact operations and they can be
-  re-added the same way the kept tools were generated.
+- **Trimmed twice**: 104 tools (full API spec) → 25 tools on 2026-08-04
+  (MSPbots' actually-configured endpoints) → **15 tools on 2026-08-26**
+  (core RMM workflow only — see Tool List above for exactly what was cut
+  each time and why). If a removed tool/category is needed later, the
+  vendor's OpenAPI spec (linked below) still documents its exact
+  operations and it can be re-added the same way the kept tools were
+  generated; git history has every removed tool's implementation verbatim.
 - **MSPbots' configured "Suspension"/"Suspension Details" endpoints have no
-  corresponding tool** — this gap predates the trim (the original 104-tool
-  build's `alerting` category never implemented a GET-suspension read
-  operation, only create/update/delete/post-incident) and was not
-  introduced by it. If suspension data is actually needed, this would need
-  to be added from the vendor's OpenAPI spec.
+  corresponding tool** — this gap predates both trims (the original
+  104-tool build's `alerting` category never implemented a GET-suspension
+  read operation, only create/update/delete/post-incident). If suspension
+  data is actually needed, this would need to be added from the vendor's
+  OpenAPI spec.
 - Not yet tested against a live ConnectWise Asio account — only
   protocol-level verification (health check, 401 on missing token,
-  `tools/list` returning all 25 tools) has been done so far.
-- `connectwise_asio_update_company_custom_fields` and
-  `connectwise_asio_create_company` take a generic `body: dict` parameter
-  rather than fully flattened named arguments — the docstring lists the
-  required top-level fields, but nested object shapes should be
-  cross-checked against the live API on first use.
+  `tools/list` returning all 15 tools) plus an intent-matching test pass
+  (real dispatch against a local server with a dummy token — confirms
+  tool/argument selection, not live API behavior) has been done so far.
+- This server is now fully read-only (both write tools — `create_company`,
+  `update_company_custom_fields` — were removed in the 2026-08-26 trim).
+- `connectwise_asio_get_os_patch_compliance_summary`'s `resource_type`
+  accepting values other than `"endpoints"` (e.g. a company/site-level
+  rollup) is unverified — the vendor's docs are behind a login wall. Its
+  sibling `connectwise_asio_get_os_patch_details` is confirmed
+  endpoints-only.

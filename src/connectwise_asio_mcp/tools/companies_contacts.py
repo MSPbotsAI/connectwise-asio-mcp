@@ -23,36 +23,11 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         except AsioError as e:
             return e.to_envelope()
 
-    @mcp.tool()
-    async def connectwise_asio_create_company(
-        body: Annotated[
-            dict[str, object],
-            Field(
-                description=(
-                    "New company fields. Required: name (string). Optional: "
-                    "description, friendlyName, industryCode, acquiredDate, "
-                    "account/activityStatus/corpContainer/ownershipType (each a "
-                    "reference-ID object), externalIds (ID-mapping object), "
-                    "primarySite (a site-creation object, same shape used by the "
-                    "site creation flow)."
-                )
-            ),
-        ],
-    ) -> str:
-        """Create a new company (client) for the partner."""
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.post("/api/platform/v1/company/companies", json_body=body)
-            return dump_json_capped(result)
-        except AsioError as e:
-            return e.to_envelope()
-
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_company(
         company_id: Annotated[
-            str, Field(description="Company ID, from connectwise_asio_get_companies.")
+            str,
+            Field(min_length=1, description="Company ID, from connectwise_asio_get_companies."),
         ],
     ) -> str:
         """Get a single company by ID."""
@@ -68,7 +43,8 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_company_sites(
         company_id: Annotated[
-            str, Field(description="Company ID, from connectwise_asio_get_companies.")
+            str,
+            Field(min_length=1, description="Company ID, from connectwise_asio_get_companies."),
         ],
     ) -> str:
         """List all sites belonging to a company."""
@@ -93,18 +69,3 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
         except AsioError as e:
             return e.to_envelope()
 
-    @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
-    async def connectwise_asio_get_site(
-        site_id: Annotated[
-            str, Field(description="Site ID, from connectwise_asio_get_sites.")
-        ],
-    ) -> str:
-        """Get a single site by ID (partner-wide, not scoped to a company)."""
-        client = client_factory()
-        if client is None:
-            return NO_TOKEN
-        try:
-            result = await client.get(f"/api/platform/v1/company/sites/{site_id}")
-            return dump_json_capped(result)
-        except AsioError as e:
-            return e.to_envelope()

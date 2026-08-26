@@ -14,25 +14,23 @@ from connectwise_asio_mcp.config import Settings
 from connectwise_asio_mcp.server import create_mcp_server
 
 # Every tool this server registers, with its required (non-default) params.
+# Trimmed 2026-08-26 from 25 to 15 tools: extracted the core RMM workflow
+# (find company/site -> find device -> check its health/patch status) and
+# dropped custom_fields (6, config/metadata management, not core monitoring),
+# create_company (the only write tool — client onboarding isn't an agent
+# task), get_site (redundant with get_company_sites), get_endpoint_applications
+# (software-inventory audit, niche), and get_endpoint_system_state (overlapped
+# with cpu/memory/disk/services and had an ambiguous "etc." in its own
+# description). See git history for the removed tools' implementations.
 EXPECTED_REQUIRED: dict[str, set[str]] = {
     "connectwise_asio_get_automation_tasks": set(),
     "connectwise_asio_get_companies": set(),
-    "connectwise_asio_create_company": {"body"},
     "connectwise_asio_get_company": {"company_id"},
     "connectwise_asio_get_company_sites": {"company_id"},
     "connectwise_asio_get_sites": set(),
-    "connectwise_asio_get_site": {"site_id"},
-    "connectwise_asio_get_custom_field_definitions": set(),
-    "connectwise_asio_get_custom_field_definition": {"definition_id"},
-    "connectwise_asio_get_company_custom_fields": {"company_id"},
-    "connectwise_asio_update_company_custom_fields": {"company_id", "body"},
-    "connectwise_asio_get_site_custom_fields": {"site_id"},
-    "connectwise_asio_get_device_custom_fields": {"endpoint_id"},
     "connectwise_asio_list_endpoints": {"category", "resource_type", "resources"},
     "connectwise_asio_get_endpoint": {"company_id", "site_id", "endpoint_id"},
     "connectwise_asio_get_endpoint_services": {"company_id", "site_id", "endpoint_id"},
-    "connectwise_asio_get_endpoint_applications": {"resource_type", "resources"},
-    "connectwise_asio_get_endpoint_system_state": {"endpoint_id"},
     "connectwise_asio_get_endpoint_disk_usage": {"endpoint_id"},
     "connectwise_asio_get_endpoint_memory_usage": {"endpoint_id"},
     "connectwise_asio_get_endpoint_cpu_usage": {"endpoint_id"},
@@ -42,12 +40,10 @@ EXPECTED_REQUIRED: dict[str, set[str]] = {
     "connectwise_asio_get_os_patch_details": {"resource_type", "resources"},
 }
 
-READ_ONLY_TOOLS = set(EXPECTED_REQUIRED) - {
-    "connectwise_asio_create_company",
-    "connectwise_asio_update_company_custom_fields",
-}
+# Every remaining tool is read-only — the trim removed the only 2 write tools.
+READ_ONLY_TOOLS = set(EXPECTED_REQUIRED)
 
-IDEMPOTENT_TOOLS = {"connectwise_asio_update_company_custom_fields"}
+IDEMPOTENT_TOOLS: set[str] = set()
 
 
 @pytest.mark.asyncio
@@ -56,7 +52,7 @@ async def test_tools_list_snapshot():
     tools = await mcp.list_tools()
     names = {t.name for t in tools}
     assert names == set(EXPECTED_REQUIRED), f"unexpected tool set: {names}"
-    assert len(tools) == 25
+    assert len(tools) == 15
 
 
 @pytest.mark.asyncio

@@ -19,7 +19,7 @@ _MAX_PAGE_SIZE = 200
 def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> None:
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_endpoint_patches(
-        endpoint_id: Annotated[str, Field(description="Endpoint (device) ID.")],
+        endpoint_id: Annotated[str, Field(min_length=1, description="Endpoint (device) ID.")],
     ) -> str:
         """Get the list of OS patches known for an endpoint."""
         client = client_factory()
@@ -34,9 +34,20 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
     @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True))
     async def connectwise_asio_get_os_patch_compliance_summary(
         resource_type: Annotated[
-            str, Field(description='Type of the IDs in resources, e.g. "endpoints".')
+            str,
+            Field(
+                description=(
+                    'Type of the IDs in resources. "endpoints" is confirmed to '
+                    "work; whether \"companies\"/\"sites\" also work for a rollup "
+                    "is unverified against the vendor's live API (docs are "
+                    "behind a login wall) — use \"endpoints\" unless you've "
+                    "confirmed otherwise."
+                )
+            ),
         ],
-        resources: Annotated[list[str], Field(description="Resource IDs to summarize.")],
+        resources: Annotated[
+            list[str], Field(min_length=1, description="Resource IDs to summarize — must be non-empty.")
+        ],
         limit: Annotated[
             int, Field(description="Page size (default 50, capped at 200).")
         ] = 50,
@@ -68,7 +79,8 @@ def register(mcp: FastMCP, client_factory: Callable[[], AsioClient | None]) -> N
             str, Field(description='Type of the IDs in resources, e.g. "endpoints".')
         ],
         resources: Annotated[
-            list[str], Field(description="Endpoint IDs to fetch patch details for.")
+            list[str],
+            Field(min_length=1, description="Endpoint IDs to fetch patch details for — must be non-empty."),
         ],
         field: Annotated[str | None, Field(description="Field-selection filter.")] = None,
     ) -> str:
